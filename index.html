@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F3A34" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101E1B" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Carnet de comptes : suivi mensuel des entrées et sorties, budgets et détail des dépenses. 100 % local sur l'appareil.">
+<meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carnet">
+<title>Carnet de comptes</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="icon" href="icon-512.png" sizes="512x512">
+<link rel="stylesheet" href="css/icons.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="top-txt">
+      <p class="brand">Carnet de comptes</p>
+      <p class="sub" id="brandSub">Tenu en local sur cet appareil</p>
+    </div>
+    <button class="icon-btn" id="undoBtn" aria-label="Annuler la dernière action" title="Annuler (⌘Z)" hidden><i class="ti ti-undo"></i></button>
+    <button class="icon-btn" id="screenAction" aria-label="Options"><i class="ti ti-dots-vertical"></i></button>
+  </header>
+
+  <div class="screen-head">
+    <h2 id="screenTitle">Accueil</h2>
+  </div>
+
+  <div class="install-bar" id="installBar">
+    <i class="ti ti-device-mobile"></i>
+    <p id="installBarText"></p>
+    <button id="installBarClose" aria-label="Masquer"><i class="ti ti-x"></i></button>
+  </div>
+
+  <div class="period-nav" id="periodNav" hidden>
+    <button class="icon-btn sm" id="prevMonth" aria-label="Mois précédent"><i class="ti ti-chevron-left"></i></button>
+    <div class="mid">
+      <button class="period-sel month" id="pickMonth"><span id="pmMonth">—</span><i class="ti ti-chevron-down chev"></i></button>
+      <button class="period-sel" id="pickYear"><span id="pmYear">—</span><i class="ti ti-chevron-down chev"></i></button>
+    </div>
+    <button class="icon-btn sm" id="nextMonth" aria-label="Mois suivant"><i class="ti ti-chevron-right"></i></button>
+    <button class="icon-btn sm" id="todayBtn" aria-label="Revenir au mois en cours" title="Mois en cours"><i class="ti ti-calendar"></i></button>
+  </div>
+
+  <main class="pages">
+
+    <!-- ====================== ACCUEIL ====================== -->
+    <section class="view active" id="viewHome">
+      <div class="hero">
+        <p class="lab">Solde cumulé — <span id="homeMonthLbl"></span></p>
+        <p class="big" id="homeSolde">0,00 €</p>
+        <p class="hero-delta" id="homeSoldeDelta"></p>
+        <div class="spark"><canvas id="sparkHome"></canvas></div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat"><p class="lab">Entrées</p><p class="v pos" id="homeEntrees">0,00 €</p></div>
+        <div class="stat"><p class="lab">Sorties</p><p class="v neg" id="homeSorties">0,00 €</p></div>
+        <div class="stat wide"><p class="lab">Différence du mois</p><p class="v" id="homeDiff">0,00 €</p></div>
+      </div>
+
+      <div class="card" id="homeBudgetCard" hidden>
+        <div class="card-head">
+          <p class="clab"><i class="ti ti-target"></i> Budget du mois</p>
+          <span class="clab" id="homeBudgetPct"></span>
+        </div>
+        <div class="gauge"><div class="gauge-fill" id="homeBudgetBar"></div></div>
+        <p class="hint" id="homeBudgetTxt"></p>
+      </div>
+
+      <div class="card" id="homeTopCard" hidden>
+        <p class="clab"><i class="ti ti-trending-down"></i> Principales dépenses du mois</p>
+        <div id="homeTop"></div>
+      </div>
+
+      <div class="card" id="homeResteCard">
+        <p class="clab"><i class="ti ti-wallet"></i> Reste à payer ce mois</p>
+        <p class="big-amber" id="homeReste">0,00 €</p>
+        <p class="hint" id="homeResteTxt"></p>
+      </div>
+
+      <div class="nav-list">
+        <button class="nav-item" data-go="month"><span class="left"><i class="ti ti-pencil ic"></i>Saisie du mois</span><i class="ti ti-chevron-right ic"></i></button>
+        <button class="nav-item" data-go="cat"><span class="left"><i class="ti ti-filter ic"></i>Filtre par catégorie</span><i class="ti ti-chevron-right ic"></i></button>
+        <button class="nav-item" data-go="charts"><span class="left"><i class="ti ti-chart-bar ic"></i>Graphiques &amp; bilan</span><i class="ti ti-chevron-right ic"></i></button>
+      </div>
+
+      <p class="kbd-hint">Raccourcis : <b>1</b> à <b>4</b> pour changer d'écran, <b>←</b> <b>→</b> pour changer de mois, <b>⌘Z</b> pour annuler, <b>Échap</b> pour fermer.</p>
+    </section>
+
+    <!-- ====================== SAISIE ====================== -->
+    <section class="view" id="viewMonth">
+      <div class="search-wrap" id="searchWrap" hidden>
+        <i class="ti ti-search"></i>
+        <input type="search" id="searchInput" placeholder="Filtrer les lignes…" autocomplete="off">
+        <button id="searchClear" aria-label="Effacer"><i class="ti ti-x"></i></button>
+      </div>
+
+      <div class="section entrees">
+        <div class="section-head"><h3>Entrées</h3><span class="section-total" id="totalEntrees">0,00 €</span></div>
+        <div id="listEntrees"></div>
+        <button class="add-cat" data-type="entree"><i class="ti ti-plus"></i>Ajouter une entrée</button>
+      </div>
+
+      <div class="section sorties">
+        <div class="section-head"><h3>Sorties</h3><span class="section-total" id="totalSorties">0,00 €</span></div>
+        <div id="listSorties"></div>
+        <button class="add-cat" data-type="sortie"><i class="ti ti-plus"></i>Ajouter une sortie</button>
+      </div>
+
+      <div class="summary">
+        <div class="row"><span class="lab">Différence du mois</span><span class="value" id="diffMois">0,00 €</span></div>
+        <div class="solde-box"><span class="lab">Solde cumulé fin de mois</span><span class="value" id="soldeCumule">0,00 €</span></div>
+      </div>
+
+      <div class="realise-box">
+        <div class="line"><span class="k">Entrées reçues (cochées)</span><span class="v" id="rEntrees">0,00 €</span></div>
+        <div class="line"><span class="k">Sorties payées (cochées)</span><span class="v" id="rSorties">0,00 €</span></div>
+        <div class="line total"><span class="k strong">Reste à payer</span><span class="v big" id="rReste">0,00 €</span></div>
+      </div>
+
+      <div class="card budgets" id="budgetCard" hidden>
+        <div class="card-head">
+          <p class="clab"><i class="ti ti-target"></i> Suivi des budgets</p>
+          <button class="mini-btn" id="budgetEdit">Modifier</button>
+        </div>
+        <div id="budgetList"></div>
+      </div>
+
+      <div class="month-actions">
+        <button class="dup-btn" id="openDup"><i class="ti ti-copy ic"></i><span>Dupliquer ce mois vers…</span></button>
+        <button class="ghost-btn" id="openTemplates"><i class="ti ti-receipt ic"></i><span>Reprendre le mois précédent</span></button>
+      </div>
+    </section>
+
+    <!-- ====================== CATÉGORIE ====================== -->
+    <section class="view" id="viewCat">
+      <button class="selector" id="catSelect"><span id="catSelectLabel">Choisir une catégorie</span><i class="ti ti-chevron-down chev"></i></button>
+      <div class="card">
+        <div class="card-head">
+          <p class="clab">Évolution sur l'année <span id="catYearLbl"></span></p>
+          <span class="clab" id="catTrend"></span>
+        </div>
+        <div class="chart-wrap" style="height:140px;"><canvas id="catLine"></canvas></div>
+      </div>
+      <div class="card" id="catStats"></div>
+      <div class="card" id="catDetail"></div>
+    </section>
+
+    <!-- ====================== GRAPHIQUES ====================== -->
+    <section class="view" id="viewCharts">
+      <button class="selector" id="yearSelect"><span id="yearSelectLabel">Année</span><i class="ti ti-chevron-down chev"></i></button>
+
+      <div class="month-picker">
+        <div class="mp-summary" id="mpSummary">
+          <div><p class="lab">Mois inclus</p><p class="sel" id="mpSel">Tous</p></div>
+          <i class="ti ti-chevron-down" id="mpChev"></i>
+        </div>
+        <div class="mp-body hidden" id="mpBody">
+          <div class="mp-tools"><a class="all" id="mpAll">Tout sélectionner</a><a class="none" id="mpNone">Tout désélectionner</a></div>
+          <div class="month-grid" id="monthGrid"></div>
+        </div>
+      </div>
+
+      <div class="card" id="bilanCard">
+        <p class="clab">Bilan de la période</p>
+        <div class="bilan" id="bilan"></div>
+      </div>
+
+      <div class="card">
+        <p class="clab">Entrées / Sorties — mois sélectionnés</p>
+        <div class="chart-wrap" style="height:160px;"><canvas id="barChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <p class="clab">Évolution du solde cumulé</p>
+        <div class="chart-wrap" style="height:150px;"><canvas id="soldeChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <p class="clab">Répartition des sorties — mois sélectionnés</p>
+        <div class="donut-row">
+          <div class="chart-wrap donut"><canvas id="donutChart"></canvas></div>
+          <div class="legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <div class="tabbar-inner">
+      <button data-go="home" class="on"><i class="ti ti-home ic"></i>Accueil</button>
+      <button data-go="month"><i class="ti ti-pencil ic"></i>Saisie</button>
+      <button data-go="cat"><i class="ti ti-filter ic"></i>Catégorie</button>
+      <button data-go="charts"><i class="ti ti-chart-bar ic"></i>Bilan</button>
+    </div>
+  </nav>
+</div>
+
+<!-- ====================== FEUILLES ====================== -->
+
+<div class="overlay" id="overlayMenu">
+  <div class="sheet">
+    <h3>Options</h3>
+
+    <p class="sheet-sec">Apparence</p>
+    <div class="seg" id="themeSeg">
+      <button data-theme="auto"><i class="ti ti-contrast"></i>Auto</button>
+      <button data-theme="clair"><i class="ti ti-sun"></i>Clair</button>
+      <button data-theme="sombre"><i class="ti ti-moon"></i>Sombre</button>
+    </div>
+    <label class="switch" id="swDelta"><span>Afficher l'écart avec le mois précédent</span><span class="track"><span class="knob"></span></span></label>
+    <label class="switch" id="swSearch"><span>Champ de recherche dans la saisie</span><span class="track"><span class="knob"></span></span></label>
+
+    <p class="sheet-sec">Données</p>
+    <div class="cats-menu">
+      <button id="menuCategories"><i class="ti ti-list-details ic"></i>Gérer les catégories</button>
+      <button id="menuBudgets"><i class="ti ti-target ic"></i>Définir les budgets</button>
+      <button id="menuSolde"><i class="ti ti-adjustments ic"></i>Solde de départ</button>
+      <button id="menuBackup"><i class="ti ti-download ic"></i>Sauvegarde complète (.json)</button>
+      <button id="menuRestore"><i class="ti ti-refresh ic"></i>Restaurer une sauvegarde</button>
+      <button id="menuExport"><i class="ti ti-receipt ic"></i>Exporter en CSV</button>
+      <button id="menuImport"><i class="ti ti-upload ic"></i>Importer un CSV</button>
+      <button id="menuReset" class="danger-text"><i class="ti ti-eraser ic"></i>Réinitialiser les montants du mois</button>
+    </div>
+
+    <p class="sheet-sec">Application</p>
+    <div class="cats-menu">
+      <button id="menuInstall"><i class="ti ti-device-mobile ic"></i>Installer sur cet appareil</button>
+      <button id="menuSync"><i class="ti ti-cloud ic"></i>Synchroniser entre appareils</button>
+      <button id="menuAbout"><i class="ti ti-info ic"></i>À propos &amp; stockage</button>
+    </div>
+
+    <div class="actions"><button class="btn ghost" id="closeMenu">Fermer</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayNewCat">
+  <div class="sheet">
+    <h3>Nouvelle ligne</h3>
+    <label for="newCatName">Nom</label>
+    <input type="text" id="newCatName" placeholder="Salle de sport" autocomplete="off">
+    <label>Type</label>
+    <div class="type-toggle">
+      <button type="button" class="active entree" data-type="entree">Entrée</button>
+      <button type="button" class="sortie" data-type="sortie">Sortie</button>
+    </div>
+    <label for="newCatBudget">Budget mensuel (facultatif)</label>
+    <input type="number" id="newCatBudget" step="0.01" inputmode="decimal" placeholder="0,00">
+    <div class="actions">
+      <button class="btn ghost" id="cancelNewCat">Annuler</button>
+      <button class="btn primary" id="confirmNewCat">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayManageCat">
+  <div class="sheet">
+    <h3>Catégories</h3>
+    <div id="catList"></div>
+    <p class="hint">Touche un nom pour le renommer. Les flèches changent l'ordre. « Supprimer » retire aussi ses montants sur tous les mois.</p>
+    <div class="actions"><button class="btn primary" id="closeManageCat">Fermer</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayBudgets">
+  <div class="sheet">
+    <h3>Budgets mensuels</h3>
+    <p class="desc">Un budget sert de repère chaque mois : l'app affiche ce qu'il reste et prévient en cas de dépassement. Laisse vide pour ne pas suivre la ligne.</p>
+    <div id="budgetEditList"></div>
+    <div class="actions">
+      <button class="btn ghost" id="cancelBudgets">Annuler</button>
+      <button class="btn primary" id="confirmBudgets">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayDetail">
+  <div class="sheet">
+    <h3 id="detailTitle">Détail</h3>
+    <p class="desc" id="detailDesc"></p>
+    <div id="detailList"></div>
+    <div class="detail-add">
+      <input type="text" id="detailLabel" placeholder="Libellé (ex. Carrefour)" autocomplete="off">
+      <input type="text" id="detailAmount" inputmode="text" placeholder="0,00">
+      <button class="mini-btn solid" id="detailAdd"><i class="ti ti-plus"></i></button>
+    </div>
+    <div class="detail-total"><span>Total</span><span id="detailTotal">0,00 €</span></div>
+    <p class="hint">Quand une ligne a un détail, son montant est calculé automatiquement.</p>
+    <div class="actions">
+      <button class="btn ghost" id="detailClear">Tout effacer</button>
+      <button class="btn primary" id="closeDetail">Terminé</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlaySolde">
+  <div class="sheet">
+    <h3>Solde de départ</h3>
+    <p class="desc">Le solde de ton compte avant le premier mois suivi. Il sert de base au solde cumulé.</p>
+    <label for="soldeInitial">Montant (€)</label>
+    <input type="number" id="soldeInitial" step="0.01" inputmode="decimal">
+    <div class="actions">
+      <button class="btn ghost" id="cancelSolde">Annuler</button>
+      <button class="btn primary" id="confirmSolde">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayReset">
+  <div class="sheet">
+    <h3 id="resetTitle">Réinitialiser le mois ?</h3>
+    <p class="desc">Tous les montants saisis sur ce mois seront effacés (coches et détails compris). Les catégories et les autres mois ne sont pas touchés. L'action reste annulable.</p>
+    <div class="actions">
+      <button class="btn ghost" id="cancelReset">Annuler</button>
+      <button class="btn danger" id="confirmReset">Effacer les montants</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayCatPick">
+  <div class="sheet">
+    <h3>Choisir une catégorie</h3>
+    <div id="catPickList" class="pick-list"></div>
+    <div class="actions"><button class="btn ghost" id="closeCatPick">Fermer</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayYearPick">
+  <div class="sheet">
+    <h3>Choisir une année</h3>
+    <div id="yearPickList" class="pick-list"></div>
+    <div class="actions"><button class="btn ghost" id="closeYearPick">Fermer</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayMonthPick">
+  <div class="sheet">
+    <h3>Choisir un mois</h3>
+    <div id="monthPickGrid" class="pick-grid"></div>
+    <div class="actions"><button class="btn ghost" id="closeMonthPick">Fermer</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayDup">
+  <div class="sheet">
+    <h3 id="dupTitle">Dupliquer le mois</h3>
+    <p class="desc" id="dupDesc"></p>
+    <label for="dupYear">Année cible</label>
+    <select id="dupYear"></select>
+    <label>Mois cibles</label>
+    <div class="month-grid" id="dupGrid"></div>
+    <p class="hint">Le mois d'origine n'est pas sélectionnable.</p>
+    <label class="switch" id="dupOverwrite"><span>Écraser les montants déjà saisis</span><span class="track"><span class="knob"></span></span></label>
+    <label class="switch" id="dupKeepChecks"><span>Copier aussi les coches « payé »</span><span class="track"><span class="knob"></span></span></label>
+    <div class="actions">
+      <button class="btn ghost" id="cancelDup">Annuler</button>
+      <button class="btn primary" id="confirmDup">Dupliquer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayInstall">
+  <div class="sheet">
+    <h3>Installer le carnet</h3>
+    <p class="desc">Installée, l'app s'ouvre en plein écran, sans barre d'adresse, et reste utilisable sans connexion.</p>
+    <div id="installBody"></div>
+    <p class="hint">Les données sont stockées séparément sur chaque appareil. Pour les transférer, utilise « Sauvegarde complète » puis « Restaurer une sauvegarde ».</p>
+    <div class="actions">
+      <button class="btn ghost" id="closeInstall">Fermer</button>
+      <button class="btn primary" id="doInstall" hidden>Installer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlaySync">
+  <div class="sheet">
+    <h3>Synchroniser entre appareils</h3>
+    <p class="desc">Le carnet n'utilise ni compte ni serveur : tes données ne quittent pas l'appareil. Deux façons de retrouver les mêmes chiffres partout :</p>
+    <div class="detail-row"><span><b>Fichier de sauvegarde</b> — exporte le .json, range-le dans iCloud Drive, restaure-le sur l'autre appareil. Gratuit, immédiat, aucun compte.</span></div>
+    <div class="detail-row"><span><b>Compte en ligne</b> — connexion Google ou Apple et base hébergée, pour une synchronisation automatique. Le fichier <code>SYNC.md</code> du dépôt décrit l'implémentation complète.</span></div>
+    <p class="hint">Tant qu'aucun serveur n'est configuré, le carnet reste entièrement hors-ligne : c'est le mode actuel.</p>
+    <div class="actions">
+      <button class="btn ghost" id="closeSync">Fermer</button>
+      <button class="btn primary" id="syncBackup">Exporter maintenant</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayAbout">
+  <div class="sheet">
+    <h3>À propos</h3>
+    <p class="desc">Carnet de comptes — version <span id="appVersion"></span>. Application autonome : aucun compte, aucun serveur, aucun traqueur.</p>
+    <div id="aboutStats"></div>
+    <p class="hint" id="aboutStorage"></p>
+    <div class="actions">
+      <button class="btn ghost" id="closeAbout">Fermer</button>
+      <button class="btn danger" id="wipeAll">Tout effacer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastText"></span><button id="toastAction" hidden></button></div>
+
+<input type="file" id="importFile" accept=".csv,text/csv" hidden>
+<input type="file" id="restoreFile" accept=".json,application/json" hidden>
+
+<script src="vendor/chart.umd.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "id": "./",
+  "name": "Carnet de comptes",
+  "short_name": "Carnet",
+  "description": "Suivi mensuel des entrées et sorties, budgets et détail des dépenses. 100 % local sur l'appareil.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#1F3A34",
+  "theme_color": "#1F3A34",
+  "orientation": "any",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Saisie du mois",
+      "short_name": "Saisie",
+      "description": "Saisir les montants du mois en cours",
+      "url": "./?ecran=month",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Graphiques & bilan",
+      "short_name": "Bilan",
+      "description": "Voir les graphiques et le bilan de l'année",
+      "url": "./?ecran=charts",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
